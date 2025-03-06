@@ -9,6 +9,10 @@ var usersRouter = require('./routes/users');
 
 let app = express();
 
+let bodyParser = require('body-parser');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 let indexRoutes = require('./routes/index');
 let usersRoutes = require('./routes/users');
 require("./routes/songs.js")(app);
