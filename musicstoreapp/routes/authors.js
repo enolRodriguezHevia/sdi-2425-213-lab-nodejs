@@ -1,6 +1,14 @@
 module.exports = function (app) {
     app.get("/authors/add", function (req, res) {
-        res.render("addAuthors.twig");
+        let roles = [
+            { value: "cantante", label: "Cantante" },
+            { value: "trompetista", label: "Trompetista" },
+            { value: "violinista", label: "Violinista" },
+            { value: "saxofonista", label: "Saxofonista" },
+            { value: "pianista", label: "Pianista" }
+        ];
+
+        res.render("addAuthors.twig", { roles: roles });
     });
 
     app.post("/authors/add", function (req, res) {
