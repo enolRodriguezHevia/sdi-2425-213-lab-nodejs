@@ -28,6 +28,18 @@ module.exports = function (app) {
         res.send(response);
     });
 
+    app.get('/authors/filter/:role', function(req, res) {
+        let authors = [
+            { name: "Michael Jackson", group: "Jackson 5", role: "Cantante" },
+            { name: "Freddy Mercury", group: "Queen", role: "Cantante" },
+            { name: "David Manuel Muñoz", group: "Estopa", role: "Cantante" }
+        ];
+        let response = {
+            authors: authors.filter(author => author.role.trim().toLowerCase() ===
+                req.params.role.trim().toLowerCase())
+        };
+        res.render("authors.twig", response);
+    });
 
     app.get("/authors", function (req, res) {
         let authors = [
