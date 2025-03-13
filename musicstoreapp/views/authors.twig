@@ -1,0 +1,23 @@
+{% extends "layout.twig" %}
+{% block title %}Lista de Autores{% endblock %}
+{% block main_container %}
+    <h2>Lista de Autores</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Grupo</th>
+            <th>Rol</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for author in authors %}
+            <tr>
+                <td>{{ author.name }}</td>
+                <td>{{ author.group }}</td>
+                <td>{{ author.role }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
