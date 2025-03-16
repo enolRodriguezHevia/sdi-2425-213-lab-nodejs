@@ -13,9 +13,14 @@ let bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
+const {MongoClient} = require('mongodb');
+const connectionString = 'mongodb+srv://admin:admin@musicstoreapp.10z6r.mongodb.net/?retryWrites=true&w=majority&appName=musicstoreapp';
+const dbClient = new MongoClient(connectionString);
+
 let indexRoutes = require('./routes/index');
 let usersRoutes = require('./routes/users');
-require("./routes/songs.js")(app);
+require("./routes/songs.js")(app, dbClient);
 require("./routes/authors.js")(app);
 
 // view engine setup
