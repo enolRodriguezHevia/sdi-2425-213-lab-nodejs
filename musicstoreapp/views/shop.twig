@@ -69,7 +69,11 @@
                         <div class="small">{{ song.author }}</div>
                         <div class="text-right">{{ song.price }} €</div>
                     </a> </div>
+                <form action="/songs/favorites/add/{{ song._id }}" method="post">
+                    <input type="submit" value="Añadir a favoritos" />
+                </form>
             </div>
+
         {% endfor %}
         <!-- Fin del Bloque canción -->
     </div>

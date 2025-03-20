@@ -8,7 +8,7 @@ module.exports = function (app) {
             { value: "pianista", label: "Pianista" }
         ];
 
-        res.render("addAuthors.twig", { roles: roles });
+        res.render("authors/add.twig", { roles: roles });
     });
 
     app.post("/authors/add", function (req, res) {
@@ -38,7 +38,7 @@ module.exports = function (app) {
             authors: authors.filter(author => author.role.trim().toLowerCase() ===
                 req.params.role.trim().toLowerCase())
         };
-        res.render("authors.twig", response);
+        res.render("authors/authors.twig", response);
     });
 
     app.get("/authors", function (req, res) {
@@ -52,7 +52,7 @@ module.exports = function (app) {
             title: 'Lista de Autores',
             authors: authors
         };
-        res.render("authors.twig", response);
+        res.render("authors/authors.twig", response);
     });
 
     app.get("/authors/*", function (req, res) {

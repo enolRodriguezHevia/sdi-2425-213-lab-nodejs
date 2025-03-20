@@ -20,7 +20,7 @@ app.use('/songs/add', userSessionRouter);
 app.use("/publications", userSessionRouter);
 app.use("/audios/", userAudiosRouter);
 app.use("/shop/", userSessionRouter);
-
+app.use("/songs/favorites", userSessionRouter);
 
 let crypto = require('crypto');
 let fileUpload = require('express-fileupload');
@@ -46,11 +46,15 @@ songsRepository.init(app, dbClient);
 const usersRepository = require("./repositories/usersRepository.js");
 usersRepository.init(app, dbClient);
 require("./routes/users.js")(app, usersRepository);
+let favoriteSongsRepository = require('./repositories/favoriteSongsRepository');
+favoriteSongsRepository.init(app, dbClient);
 
 let indexRoutes = require('./routes/index');
 let usersRoutes = require('./routes/users');
+require("./routes/songs/favorites.js")(app, favoriteSongsRepository, songsRepository);
 require("./routes/songs.js")(app, songsRepository);
 require("./routes/authors.js")(app);
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

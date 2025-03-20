@@ -1,0 +1,34 @@
+{% extends "layout.twig" %}
+
+{% block title %} Canciones favoritas {% endblock %}
+
+{% block main_container %}
+    <h2>Mis canciones favoritas</h2>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Precio</th>
+                <th>Título</th>
+                <th class="col-md-1"></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for favorite in favorites %}
+                <tr>
+                    <td>{{ favorite.date }}</td>
+                    <td>{{ favorite.price }}</td>
+                    <td>{{ favorite.title }}</td>
+                    <td>
+                        <a href="/songs/favorites/delete/{{ favorite._id }}">Eliminar de favoritos</a> <br>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div>
+            <p>Precio total: {{ priceSum }}</p>
+        </div>
+    </div>
+{% endblock %}
