@@ -19,7 +19,7 @@ module.exports = function (app, usersRepository) {
     }
 
     usersRepository.insertUser(user).then((userId) => {
-      res.send("Usuario registrado " + userId);
+      res.redirect("/users/login");
     } ).catch((error) => {
       res.send("Error al insertar usuario");
     });
@@ -42,8 +42,8 @@ module.exports = function (app, usersRepository) {
           req.session.user = null;
           res.send("Usuario no identificado");
         } else {
-            req.session.user = user.email;
-          res.send("Usuario identificado correctamente " + user.email);
+          req.session.user = user.email;
+          res.redirect('/publications');
         }
       }).catch((error) => {
         req.session.user = null;
