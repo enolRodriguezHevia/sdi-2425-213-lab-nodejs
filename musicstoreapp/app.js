@@ -7,6 +7,8 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 
 let app = express();
+let jwt = require('jsonwebtoken');
+app.set('jwt', jwt);
 let expressSession = require('express-session');
 app.use(expressSession({
   secret: 'abcdefg',
@@ -27,6 +29,8 @@ app.use("/songs/favorites", userSessionRouter);
 const userAuthorRouter = require('./routes/userAuthorRouter');
 app.use("/songs/edit", userAuthorRouter);
 app.use("/songs/delete", userAuthorRouter);
+const userTokenRouter = require('./routes/userTokenRouter');
+app.use("/api/v1.0/songs/", userTokenRouter);
 
 let crypto = require('crypto');
 let fileUpload = require('express-fileupload');
@@ -59,7 +63,7 @@ let indexRoutes = require('./routes/index');
 let usersRoutes = require('./routes/users');
 require("./routes/songs/favorites.js")(app, favoriteSongsRepository, songsRepository);
 require("./routes/songs.js")(app, songsRepository);
-require("./routes/api/songsAPIv1.0.js")(app, songsRepository);
+require("./routes/api/songsAPIv1.0.js")(app, songsRepository, usersRepository);
 require("./routes/authors.js")(app);
 
 
