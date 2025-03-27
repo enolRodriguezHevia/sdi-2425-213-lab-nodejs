@@ -82,8 +82,9 @@ module.exports = function (app, songsRepository) {
     app.get('/songs/:id', function (req, res) {
         let filter = {_id: new ObjectId(req.params.id)};
         let options = {};
-        songsRepository.findSong(filter, options).then(song => {
-            res.render("songs/song.twig", {song: song});
+        songsRepository.findSong(filter, options).then(async song => {
+            let isAvailableToBuy = await checkIfAbleToBuy(song, req.session.user);
+            res.render("songs/song.twig", {song: song, isAvailableToBuy});
         }).catch(error => {
             res.send('Se ha producido un error al buscar la canción ' + error)
         });
@@ -178,21 +179,33 @@ module.exports = function (app, songsRepository) {
         });
     });
 
-    app.post('/songs/buy/:id', function (req, res) {
+    app.post('/songs/buy/:id', async function (req, res) {
         let songId = new ObjectId(req.params.id);
         let shop = {
             user: req.session.user,
             song_id: songId
         }
-        songsRepository.buySong(shop).then(result => {
-        if (result.insertedId === null || typeof (result.insertedId) === undefined) {
-            res.send("Se ha producido un error al comprar la canción")
-        } else {
-            res.redirect("/purchases");
+
+        let filter = { "_id": songId };
+        let options = {};
+
+        try {
+            let song = await songsRepository.findSong(filter, options);
+            let isAvailableToBuy = await checkIfAbleToBuy(song, req.session.user);
+
+            if (!isAvailableToBuy) {
+                res.send("No puedes comprar esta canción porque quizás seas el autor o ya la has comprado en el pasado");
+            } else {
+                let result = await songsRepository.buySong(shop);
+                if (result.insertedId === null || typeof (result.insertedId) === undefined) {
+                    res.send("Se ha producido un error al comprar la canción");
+                } else {
+                    res.redirect("/purchases");
+                }
+            }
+        } catch (error) {
+            res.send("Se ha producido un error: " + error);
         }
-        }).catch(error => {
-            res.send("Se ha producido un error al comprar la canción " + error)
-        })
     });
 
     app.get('/purchases', function (req, res) {
@@ -242,6 +255,21 @@ module.exports = function (app, songsRepository) {
         }
     }
 
+    async function checkIfAbleToBuy(song, user) {
+        try {
+            let isAbleToBuy = song.author !== user;
+            let purchasesFilter = { user: user };
+            let purchasesOptions = {};
+            if(!isAbleToBuy) return;
+            let purchases = await songsRepository.getPurchases(purchasesFilter, purchasesOptions);
+            if (purchases.some(p => p.song_id.equals(song._id))) {
+                isAbleToBuy = false;
+            }
+            return isAbleToBuy;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 
