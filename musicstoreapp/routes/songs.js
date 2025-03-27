@@ -80,15 +80,40 @@ module.exports = function (app, songsRepository) {
     });
 
     app.get('/songs/:id', function (req, res) {
-        let filter = {_id: new ObjectId(req.params.id)};
+        let filter = { _id: new ObjectId(req.params.id) };
         let options = {};
         songsRepository.findSong(filter, options).then(async song => {
-            let isAvailableToBuy = await checkIfAbleToBuy(song, req.session.user);
-            res.render("songs/song.twig", {song: song, isAvailableToBuy});
+            try {
+                let isAvailableToBuy = await checkIfAbleToBuy(song, req.session.user);
+
+                let settings = {
+                    url: "https://api.currencyapi.com/v3/latest?apikey=cur_live_Oh6ohM9xguiZRhy636vQfR6DqZv4QAAgwFoERUFx&base_currency=EUR&currencies=USD",
+                    method: "get",
+                };
+
+                let rest = app.get("rest");
+
+                rest(settings, function (error, response, body) {
+                    if (error) {
+                        console.error("Error al obtener el tipo de cambio: ", error);
+                        res.send("Error al obtener el tipo de cambio.");
+                    } else {
+                        console.log("cod: " + response.statusCode + " Cuerpo: " + body);
+                        let responseObject = JSON.parse(body);
+                        let rateUSD = responseObject.data.USD.value;
+                        let songValue = song.price / rateUSD;
+                        song.usd = Math.round(songValue * 100) / 100;
+                        res.render("songs/song.twig", { song: song, isAvailableToBuy });
+                    }
+                });
+            } catch (error) {
+                res.send('Se ha producido un error al procesar la canción: ' + error);
+            }
         }).catch(error => {
-            res.send('Se ha producido un error al buscar la canción ' + error)
+            res.send('Se ha producido un error al buscar la canción ' + error);
         });
     });
+
 
     app.get('/songs/:kind/:id', function (req, res) {
         let response = 'id: ' + req.params.id + '<br>'
