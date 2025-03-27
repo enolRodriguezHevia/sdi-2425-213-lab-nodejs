@@ -59,6 +59,7 @@ let indexRoutes = require('./routes/index');
 let usersRoutes = require('./routes/users');
 require("./routes/songs/favorites.js")(app, favoriteSongsRepository, songsRepository);
 require("./routes/songs.js")(app, songsRepository);
+require("./routes/api/songsAPIv1.0.js")(app, songsRepository);
 require("./routes/authors.js")(app);
 
 
