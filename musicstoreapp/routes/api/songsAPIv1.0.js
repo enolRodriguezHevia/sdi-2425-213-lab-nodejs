@@ -34,18 +34,27 @@ module.exports = function (app, songsRepository, usersRepository) {
         try {
             let songId = new ObjectId(req.params.id)
             let filter = {_id: songId}
-            songsRepository.deleteSong(filter, {}).then(result => {
-                if (result === null || result.deletedCount === 0) {
-                    res.status(404);
-                    res.json({error: "ID inválido o no existe, no se ha borrado el registro."}); }
-                else {
-                    res.status(200);
-                    res.send(JSON.stringify(result));
+            let user = res.user;
+
+            isCorrectAuthor(user, songId, function (isTheAuthor) {
+                if(!isTheAuthor) {
+                    res.status(422);
+                    res.json({errors: [{"msg": "Solo puede eliminar canciones el autor de la misma"}]});
+                } else {
+                    songsRepository.deleteSong(filter, {}).then(result => {
+                        if (result === null || result.deletedCount === 0) {
+                            res.status(404);
+                            res.json({error: "ID inválido o no existe, no se ha borrado el registro."}); }
+                        else {
+                            res.status(200);
+                            res.send(JSON.stringify(result));
+                        }
+                    }).catch(error => {
+                        res.status(500);
+                        res.json({error: "Se ha producido un error al eliminar la canción."})
+                    });
                 }
-            }).catch(error => {
-                res.status(500);
-                res.json({error: "Se ha producido un error al eliminar la canción."})
-            });
+            })
         } catch (e) {
             res.status(500);
             res.json({error: "Se ha producido un error, revise que el ID sea válido."})
@@ -58,20 +67,26 @@ module.exports = function (app, songsRepository, usersRepository) {
                 title: req.body.title,
                 kind: req.body.kind,
                 price: req.body.price,
-                author: req.session.user
+                author: res.user
             }
             // Validar aquí: título, género, precio y autor.
-
-            songsRepository.insertSong(song, function (songId) {
-                if (songId === null) {
-                    res.status(409);
-                    res.json({error: "No se ha podido crear la canción. El recurso ya existe."});
+            validateSong(song, function (errors) {
+                if(errors != null && errors.length > 0) {
+                    res.status(422);
+                    res.json({errors: errors});
                 } else {
-                    res.status(201);
-                    res.json({
-                        message: "Canción añadida correctamente.",
-                        _id: songId
-                    })
+                    songsRepository.insertSong(song, function (songId) {
+                        if (songId === null) {
+                            res.status(409);
+                            res.json({error: "No se ha podido crear la canción. El recurso ya existe."});
+                        } else {
+                            res.status(201);
+                            res.json({
+                                message: "Canción añadida correctamente.",
+                                _id: songId
+                            })
+                        }
+                    });
                 }
             });
         } catch (e) {
@@ -165,5 +180,62 @@ module.exports = function (app, songsRepository, usersRepository) {
             });
         }
     });
+
+    function validateSong(song, callbackFunction) {
+        let errors = [];
+        if (song.title === null || typeof song.title === 'undefined' || song.title.trim().length === 0)
+            errors.push({
+                "value": song.title,
+                "msg": "El titulo de la canción no puede estar vacío",
+                "param": "title",
+                "location": "body"
+            })
+
+        if (song.title.trim().length < 3 || song.title.trim().length > 20)
+            errors.push({
+                "value": song.title,
+                "msg": "El titulo de la canción no puede ser mayor de 20 caracteres o menor de 3",
+                "param": "title",
+                "location": "body"
+            })
+
+        if (song.kind.trim().length < 3 || song.kind.trim().length > 20)
+            errors.push({
+                "value": song.kind,
+                "msg": "La categoría de la canción no puede ser mayor de 20 caracteres o menor de 3",
+                "param": "kind",
+                "location": "body"
+            })
+
+        if (song.kind === null || typeof song.kind === 'undefined' || song.kind.trim().length === 0)
+            errors.push({
+                "value": song.kind,
+                "msg": "La categoría de la canción no puede estar vacía",
+                "param": "kind",
+                "location": "body"
+            })
+
+        if (song.price === null || typeof song.price === 'undefined' || song.price < 0
+            || song.price.trim().length === 0)
+            errors.push({
+                "value": song.price,
+                "msg": "El precio de la canción no puede ser negativo ni estar sin definir",
+                "param": "price",
+                "location": "body"
+            })
+
+        if (errors.length <= 0)
+            callbackFunction(null);
+        else
+            callbackFunction(errors);
+    }
+
+    function isCorrectAuthor(user, songId, callbackFunction){
+        let filter = {$and: [{'author': user}, {'_id': songId}]};
+
+        songsRepository.getSongs(filter, {}).then(songs => {
+            callbackFunction(songs!=null && songs.length > 0);
+        });
+    }
 }
 
